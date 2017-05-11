@@ -6,6 +6,7 @@ import android.content.Context;
 import android.media.MediaRecorder;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.widget.Toast;
 
 import java.io.File;
@@ -82,7 +83,7 @@ public class MyIntentService extends IntentService {
         if(!folder.exists()){
         folder.mkdirs();}
         Date date = new Date();
-        File file = new File(storageDir+"/"+date.getTime() +"Audio1.mp3");
+        File file = new File(storageDir+"/"+date.getDate() +"Audio1.mp3");
         recorder.setOutputFile(file.getAbsolutePath());
         try {
             recorder.prepare();
@@ -103,6 +104,16 @@ public class MyIntentService extends IntentService {
             e.printStackTrace();
 
         }
+    }
+
+    @Override
+    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+        //return super.onStartCommand(intent, flags, startId);
+        super.onStartCommand(intent, flags, startId);
+
+
+        return START_STICKY;
+
     }
 
     /**
