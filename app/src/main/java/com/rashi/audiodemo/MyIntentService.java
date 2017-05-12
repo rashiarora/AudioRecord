@@ -3,10 +3,16 @@ package com.rashi.audiodemo;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.MediaRecorder;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.io.File;
@@ -20,7 +26,11 @@ import java.util.Date;
  * TODO: Customize class - update intent actions, extra parameters and static
  * helper methods.
  */
-public class MyIntentService extends IntentService {
+public class MyIntentService extends IntentService implements SensorEventListener  {
+    SensorManager sensorManager;
+    Sensor sensor;
+    CountDownTimer start;
+    Boolean flag = false;
     // TODO: Rename actions, choose action names that describe tasks that this
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
     private static final String ACTION_FOO = "com.rashi.audiodemo.action.FOO";
@@ -70,33 +80,36 @@ public class MyIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
-
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         recorder.setAudioEncoder(MediaRecorder.OutputFormat.DEFAULT);
         String storageDir = Environment.getExternalStorageDirectory()+File.separator+"Sound";
         //if(!storageDir.exists()){
-          //  storageDir.mkdirs();
+        //  storageDir.mkdirs();
         //}
         File folder = new File(storageDir);
         if(!folder.exists()){
-        folder.mkdirs();}
+            folder.mkdirs();}
         Date date = new Date();
-        File file = new File(storageDir+"/"+date.getDate() +"Audio1.mp3");
+        File file = new File(storageDir+"/"+date.getTime() +"Audio.mp3");
         recorder.setOutputFile(file.getAbsolutePath());
-        try {
+
+        /*try {
             recorder.prepare();
             recorder.start();
 
-            //Toast.makeText(this,"Started",Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),"Started",Toast.LENGTH_LONG).show();
+            Log.i("recordStart","start");
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     recorder.stop();
                     recorder.release();
+                    Toast.makeText(getApplicationContext(), "Stopped",Toast.LENGTH_LONG).show();
+                    Log.i("recordStop","stop");
                 }
-            },7000000);
+            },9000000);
         }catch (IllegalStateException e){
             e.printStackTrace();
         }
@@ -104,15 +117,22 @@ public class MyIntentService extends IntentService {
             e.printStackTrace();
 
         }
+*/
+
+
+
+
     }
 
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-        //return super.onStartCommand(intent, flags, startId);
-        super.onStartCommand(intent, flags, startId);
+
+        sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
 
 
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
 
     }
 
@@ -152,4 +172,104 @@ public class MyIntentService extends IntentService {
         // TODO: Handle action Baz
         throw new UnsupportedOperationException("Not yet implemented");
     }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float[] values = event.values;
+
+            float x = values[0];
+            float y = values[1];
+            float z = values[2];
+
+            // set the data on textView
+            float calculation = ((x * x) + (y * y) + (z * z)) / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
+                if (calculation >= 3 && calculation <= 5) {
+                    //Intent i = new Intent("SHAKE");// Implicit Intent
+                    //sendBroadcast(i);
+                    //flag = true;
+                    // Toast.makeText(getApplicationContext(), "Phone Shake Detected", Toast.LENGTH_LONG).show();
+                    Log.i("shake", "shaked");
+                    try {
+                        recorder.prepare();
+                        recorder.start();
+
+                        Toast.makeText(getApplicationContext(), "Started", Toast.LENGTH_LONG).show();
+                        Log.i("recordStart", "start");
+                   /* new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            recorder.stop();
+                            recorder.release();
+                            Toast.makeText(getApplicationContext(), "Stopped",Toast.LENGTH_LONG).show();
+                            Log.i("recordStop","stop");
+                        }
+                    },7000000);*/
+
+                    } catch (IllegalStateException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                    else if (calculation > 5 && calculation <= 9) {
+
+                    recorder.stop();
+                    recorder.release();
+
+                    Toast.makeText(getApplicationContext(), "Stopped", Toast.LENGTH_LONG).show();
+                    Log.i("recordStop", "stop");
+                    sensorManager.unregisterListener(this);
+                    //flag = false;
+                }
+
+
+            }
+
+
+            }
+
+
+
+
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+   /* @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float[] values = event.values;
+
+            float x = values[0];
+            float y = values[1];
+            float z = values[2];
+
+            // set the data on textView
+            float calculation = ((x * x) + (y * y) + (z * z)) / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
+            if (calculation == 3) {
+                //Intent i = new Intent("SHAKE");// Implicit Intent
+                //sendBroadcast(i);
+
+
+
+
+
+
+
+                Toast.makeText(getApplicationContext(), "Phone Shake Detected", Toast.LENGTH_LONG).show();
+                Log.i("shake","shaked");
+                sensorManager.unregisterListener(this);
+
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }*/
 }

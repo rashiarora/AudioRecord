@@ -18,9 +18,9 @@ public class Receiver extends BroadcastReceiver {
         if (action.equals("SHAKE")) {
             System.out.println("User is present");
             Log.i("msg","Shake detected by reciever");
-            Intent s = new Intent(context, MyIntentService.class);
+            /*Intent s = new Intent(context, MyIntentService.class);
             //s.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startService(s);
+            context.startService(s);*/
             /*start1 = new CountDownTimer(5000,1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
